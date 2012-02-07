@@ -1,15 +1,16 @@
-DoneDone API Python Client Library
+# DoneDone API Python Client Library
 
-== REQUIREMENT ==
+## REQUIREMENT
 Python version 2.6+ (developed against 2.6.7)
 Python's cURL module
 
-== USAGE ==
+## USAGE
 To use the Python library with a DoneDone project, you will need to enable the API option under the Project Settings page.
 
 Please see http://www.getdonedone.com/api fore more detailed documentation.
 
-=== EXAMPLES ===
+## EXAMPLES
+```python
 '''Initializing'''
 from DoneDone import IssueTracker
 
@@ -30,3 +31,4 @@ The examples below will get all your projects with the API enabled.
 issueTracker->API("GetProjects")
 # or
 issueTracker->getProjects()
+```
