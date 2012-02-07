@@ -28,7 +28,7 @@ API methods can be accessed by calling IssueTracker::API(), or by calling the eq
 The examples below will get all your projects with the API enabled.
 '''
 
-issueTracker->API("GetProjects")
+issueTracker.API("GetProjects")
 # or
-issueTracker->getProjects()
+issueTracker.getProjects()
 ```
