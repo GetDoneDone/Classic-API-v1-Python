@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import os
 import sys
-import pycurl
 import hashlib
 import hmac
 from base64 import b64encode
+import requests
 
 class IssueTracker(object):
         '''Provide access to the DoneDone IssueTracker API.
@@ -63,36 +63,24 @@ class IssueTracker(object):
             update - flag to indicate if this is a PUT operation
             '''
             url = self.baseURL + methodURL
-            curl = pycurl.Curl()
-            curl.setopt(pycurl.URL, url)
-            curl.setopt(pycurl.HTTPHEADER, [
-                'Authorization: Basic %s' % self.auth,
-                'X-DoneDone-Signature: %s' % self._calculateSignature(url, data)
-            ])
-            if data or attachments:
-                if update:
-                    curl.setopt(pycurl.CUSTOMREQUEST, 'PUT')
-                else:
-                    curl.setopt(pycurl.POST, True)
+            headers = {}
+            files = []
+
+            if attachments:
+                request_method = requests.post
                 if attachments:
                     files = []
-                    i = 0
-                    for item in attachments:
-                        files.append(pycurl.FORM_FILE)
-                        files.append(item)
-                        data.append(('attachment-%s' % i, (pycurl.FORM_FILE,
-                            item)))
-                        i += 1
+                    for index, attachment in enumerate(attachments):
+                        files.append(('attachment-%d' % index, attachment))
+            else:
+                request_method = requests.get
 
-                curl.setopt(pycurl.HTTPPOST, data)
+            if update:
+                request_method = requests.put
 
-            try:
-                curl.setopt(pycurl.WRITEFUNCTION, self._curlCallback)
-                curl.perform()
-                curl.close()
-                return self.result
-            except:
-                return sys.exc_info()[0]
+            headers["X-DoneDone-Signature"] = self._calculateSignature(url, data)
+            headers["Authorization"] = "Basic %s" % self.auth
+            return request_method(url, data=data, files=files, headers=headers)
 
         def getProjects(self, loadWithIssues=False):
             '''Get all Projects with the API enabled
