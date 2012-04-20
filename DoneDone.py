@@ -3,6 +3,7 @@ import os
 import sys
 import hashlib
 import hmac
+import urllib
 from base64 import b64encode
 import requests
 
@@ -12,9 +13,9 @@ class IssueTracker(object):
         See http://www.getdonedone.com/api for complete documentation for the
         API.
         '''
-        def __init__(self, domain, token, username, password):
+        def __init__(self, domain, token, username, password, debug=False):
             '''Default constructor
-
+	    _debug - print debug messages
             domain - company's DoneDone domain
             token - the project API token
             username - DoneDone username
@@ -23,7 +24,8 @@ class IssueTracker(object):
             self.baseURL = 'https://%s.mydonedone.com/IssueTracker/API/' % domain
             self.auth = self._calculateAuth(username, password)
             self.token = token
-            self.result = None
+            self.result = None 
+            self._debug = debug;
 
         def _curlCallback(self, result):
             '''PyCurl callback'''
@@ -45,14 +47,22 @@ class IssueTracker(object):
             '''
             if data:
                 for index, value in list(
-                    enumerate(sorted(data, key=lambda data: data[0]))):
+                    enumerate(sorted(data, key=lambda data: data[0].lower()))):
+		    if self._debug:
+                        print str(value[0])+str(value[1])
+
                     url += str(value[0])+ str(value[1])
 
-            return b64encode(hmac.new(
+            res = b64encode(hmac.new(
                 self.token, url,
                 digestmod=hashlib.sha1).digest())
+            if self._debug:
+		print url
+                print res
+           
+            return res
 
-        def API(self, methodURL, data=None, attachments=None, update=False):
+        def API(self, methodURL, data=None, attachments=None, update=False,post=False):
             '''Perform generic API calling
 
             This is the base method for all IssueTracker API calls.
@@ -77,6 +87,9 @@ class IssueTracker(object):
 
             if update:
                 request_method = requests.put
+
+            if post:
+ 		request_method = requests.post
 
             headers["X-DoneDone-Signature"] = self._calculateSignature(url, data)
             headers["Authorization"] = "Basic %s" % self.auth
@@ -173,7 +186,7 @@ class IssueTracker(object):
                 data.append(('tags', tags))
             if watcherIDs:
                 data.append(('watcher_ids', str(watcherIDs)))
-            return self.API('Issue/%s' % projectID, data, attachments)
+            return self.API('Issue/%s' % projectID, data, attachments,post=True)
 
         def createComment(
             self, projectID, issueID, comment,
@@ -191,7 +204,7 @@ class IssueTracker(object):
 
             if peopleToCCIDs:
                 data.append(('people_to_cc_ids', peopleToCCIDs))
-            return self.API('Comment/%s/%s' % (projectID, issueID), data, attachments)
+            return self.API('Comment/%s/%s' % (projectID, issueID), data, attachments,post=True)
 
         def updateIssue(
             self, projectID, issueID, title=None, priorityID=None,
