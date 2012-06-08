@@ -13,7 +13,7 @@ class IssueTracker(object):
         See http://www.getdonedone.com/api for complete documentation for the
         API.
         '''
-        def __init__(self, domain, token, username, password, debug=False):
+        def __init__(self, domain, token, username, password=None, debug=False):
             '''Default constructor
 	    _debug - print debug messages
             domain - company's DoneDone domain
@@ -22,7 +22,7 @@ class IssueTracker(object):
             password - DoneDone password
             '''
             self.baseURL = 'https://%s.mydonedone.com/IssueTracker/API/' % domain
-            self.auth = self._calculateAuth(username, password)
+            self.auth = self._calculateAuth(username, token)
             self.token = token
             self.result = None 
             self._debug = debug;
@@ -39,28 +39,7 @@ class IssueTracker(object):
             '''
             return b64encode(username + ':' + password)
 
-        def _calculateSignature(self, url, data=None):
-            '''Calculate Signature for each request
-
-            url - DoneDone API url
-            data - optional POST form data
-            '''
-            if data:
-                for index, value in list(
-                    enumerate(sorted(data, key=lambda data: data[0].lower()))):
-		    if self._debug:
-                        print str(value[0])+str(value[1])
-
-                    url += str(value[0])+ str(value[1])
-
-            res = b64encode(hmac.new(
-                self.token, url,
-                digestmod=hashlib.sha1).digest())
-            if self._debug:
-		print url
-                print res
-           
-            return res
+       
 
         def API(self, methodURL, data=None, attachments=None, update=False,post=False):
             '''Perform generic API calling
@@ -91,7 +70,6 @@ class IssueTracker(object):
             if post:
  		request_method = requests.post
 
-            headers["X-DoneDone-Signature"] = self._calculateSignature(url, data)
             headers["Authorization"] = "Basic %s" % self.auth
             return request_method(url, data=data, files=files, headers=headers)
 
