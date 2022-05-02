@@ -1,4 +1,4 @@
-# DoneDone API Python Client Library
+# DoneDone Classic API v1 PHP Wrapper
 
 ## REQUIREMENT
 Python version 2.6+ (developed against 2.6.7)
